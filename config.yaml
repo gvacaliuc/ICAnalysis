@@ -1,0 +1,6 @@
+coords: 'savefiles/pentapeptide_coords.npy'
+resnames: 'savefiles/pentapeptide_resnames.npy'
+icacoffs: 'savefiles/pentapeptide_icacoffs_8dim.npy'
+pname: 'pentapeptide'
+saveDir: 'savefiles/'
+figDir: 'savefiles/figures/'
