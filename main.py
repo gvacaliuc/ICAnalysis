@@ -37,7 +37,18 @@ def _get_anharm( data, function ):
 
     return list(indices), num;
 
-def analyze( config ):
+def main( config ):
+
+    log = logging.getLogger('main');
+
+    fh = logging.FileHandler(config['logfile']);
+    formatter = logging.Formatter('%(asctime)s %(levelname)s: %(message)s');
+    fh.setLevel(logging.DEBUG);
+    fh.setFormatter(formatter);
+    
+    log.addHandler(fh);
+
+    log.info('Saving all files to: {0}'.format(os.path.abspath(config['saveDir'])));
 
     coords =    np.load(config['coords']);
     resnames =  np.load(config['resnames']);
@@ -77,7 +88,7 @@ def analyze( config ):
         for j in range(1,4):
             ax.annotate('Std. Dev * {0}'.format(j), xy=(0, stat[j]), xytext=(5, stat[j]*(1+1/j)),);
         plt.savefig( os.path.join(config['figDir'], '{0}_anharm_moment{1}.png'.format(config['pname'], i)) );
-        pickle.dump( fig, file( os.path.join(config['figDir'], '{0}_anharm_moment{1}.png'.format(config['pname'], i)), 'w+') );
+        pickle.dump( fig, file( os.path.join(config['figDir'], '{0}_anharm_moment{1}.pickle'.format(config['pname'], i)), 'w+') );
         if 'graph' in config and config['graph']:
             plt.show();
 
@@ -129,4 +140,4 @@ if __name__ == '__main__':
     if not os.path.isfile( config['icacoffs'] ):
         raise IOError( 'Error opening icacoffs file: {0}'.format(os.path.abspath(config['icacoffs'])) );
 
-    analyze( config );
+    main( config );

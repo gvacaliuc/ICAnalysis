@@ -1,5 +1,17 @@
+from core.views import *
+from core.models import PluginModel, Job
+from django.http import HttpResponse, HttpResponseRedirect
+from django.shortcuts import render
+
+import os
+import markdown
+md = markdown.Markdown();
+import glob
+from importlib import import_module
+import sys
+
 def icanalysis_view(request, path):
-    plugin_name = path.split('/')[0];
+    plugin_name = path.split('/')[0].lower();
     plugin = PluginModel.objects.filter(name = plugin_name)[0];
     username = request.user.username;
     context = {'plugin':plugin,'username':username,};
@@ -23,6 +35,8 @@ def icanalysis_view(request, path):
         parent = globals()[str(parent_plugin)+'_job'].objects.filter( jobid = parent_jobid)[0];
 
         parent_saveDir  = parent.saveDir;
+        with open('/home/v32/Devel/log.txt', 'w+') as f:
+            f.write(parent_saveDir + '\n');
         icacoffs_path   = os.path.join( parent_saveDir, glob.glob(os.path.join( parent_saveDir, '*icacoffs*'))[0] );
         resnames_path   = os.path.join( parent_saveDir, glob.glob(os.path.join( parent_saveDir, '*resnames*'))[0] );
         coords_path     = os.path.join( parent_saveDir, glob.glob(os.path.join( parent_saveDir, '*coords*'))[0] );
@@ -38,21 +52,22 @@ def icanalysis_view(request, path):
             os.makedirs(figDir);
         logfile = os.path.join(saveDir, 'log.txt');
 
-        job = globals()[str(plugin.name)+'_job']().save(commit=False);
-
         #   Creates model and commits
-        job.username    = request.user.username;
-        job.userid      = request.user.id;
-        job.jobid       = jobid;
-        job.saveDir     = saveDir;
-        job.logfile     = logfile;
-        job.figDir      = figDir;
-        job.state       = 2;    #   State = QUEUED
-        job.icacoffs    = icacoffs_path;
-        job.resnames    = resnames_path;
-        job.coords      = coords_path;
-        job.pname       = pname;
-        job.save(commit=True);
+        job_config = {};
+        job_config['username']    = request.user.username;
+        job_config['userid']      = request.user.id;
+        job_config['jobid']       = jobid;
+        job_config['saveDir']     = saveDir;
+        job_config['logfile']     = logfile;
+        job_config['figDir']      = figDir;
+        job_config['state']      = 2;    #   State = QUEUED
+        job_config['icacoffs']    = icacoffs_path;
+        job_config['resnames']    = resnames_path;
+        job_config['coords']      = coords_path;
+        job_config['pname']       = pname;
+
+        job = globals()[str(plugin.name)+'_job'](**job_config);
+        job.save();
         
         #   Turn Model into Dict
         job_config = model_to_dict(job);
@@ -71,7 +86,35 @@ def icanalysis_view(request, path):
         time.sleep(2);
         return HttpResponseRedirect('/account/');
 
-    jobs = Job.objects.filter( userid = request.user.id );
+    count = 0;
+    jobs = _getjobs(request, request.user.id);
+    keep = [];
+    for i in range(len(jobs)):
+        if jobs[i].plugin_name == 'wqaa':
+            keep.append(jobs[i]);
+    jobs = keep;
+    keep = [];
+    for i in range(len(jobs)):
+        if len( icanalysis_job.objects.filter( pname = jobs[i].pname ) ) == 0:
+            keep.append(jobs[i]);
+    jobs = keep;
+
     context['jobs'] = jobs;
 
     return render(request, path+'index.html', context);
+
+def _getjobs(request, userid, jobid=None):
+    context = {'userid': userid,};
+    if not jobid == None:
+        context['jobid'] = jobid;
+    plugins = PluginModel.objects.all();
+    jobs = [];
+    for plugin in plugins:
+        temp = globals()[str(plugin.name)+'_job'].objects.filter(**context);
+        for plug in temp:
+            jobs.append(plug);
+    print len(jobs);
+    if not len(jobs) < 1:
+        return jobs;
+    else:
+        return None;
