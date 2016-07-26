@@ -76,16 +76,14 @@ def main( config ):
     for i in range(icacoffs.shape[0]):
         fig = plt.figure();
         ax = fig.gca();
-        ax.plot(np.abs(icacoffs[i]), color='black');
+        ax.plot(np.abs(icacoffs[i]), color='black', label='Data');
         stat = [];
-        for j in range(4):
+        for j in range(1,4):
             stat.append( func[j](icacoffs[i], j) );
-            ax.plot(stat[j], color=color[j]);
+            ax.plot([0,icacoffs.shape[1]], [stat[j-1],stat[j-1]], color=color[j], label='{0}*Std. Dev.'.format(j));
         ax.set_title('ICA Anharmonicity: Moment {0}'.format(i));
         ax.set_xlabel('Conformation');
-        ax.annotate('Mean', xy=(0,stat[0]), xytext=(5, stat[0] - 5),);
-        for j in range(1,4):
-            ax.annotate('Std. Dev * {0}'.format(j), xy=(0, stat[j]), xytext=(5, stat[j]*(1+1/j)),);
+        ax.legend(fontsize=10);
         plt.savefig( os.path.join(config['figDir'], '{0}_anharm_moment{1}.png'.format(config['pname'], i)) );
         pickle.dump( fig, file( os.path.join(config['figDir'], '{0}_anharm_moment{1}.pickle'.format(config['pname'], i)), 'w+') );
         if 'graph' in config and config['graph']:
