@@ -99,7 +99,8 @@ def icanalysis_view(request, path):
             keep.append(jobs[i]);
     jobs = keep;
 
-    context['jobs'] = jobs;
+    if not len(jobs) == 0:
+        context['jobs'] = jobs;
 
     return render(request, path+'index.html', context);
 
@@ -113,8 +114,4 @@ def _getjobs(request, userid, jobid=None):
         temp = globals()[str(plugin.name)+'_job'].objects.filter(**context);
         for plug in temp:
             jobs.append(plug);
-    print len(jobs);
-    if not len(jobs) < 1:
-        return jobs;
-    else:
-        return None;
+    return jobs;
