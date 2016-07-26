@@ -83,7 +83,6 @@ def icanalysis_view(request, path):
         log.setLevel(logging.DEBUG);
 
         add_task(plugin_exec.main, job_config, jobid,);
-        time.sleep(2);
         return HttpResponseRedirect('/account/');
 
     count = 0;
