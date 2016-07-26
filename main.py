@@ -29,9 +29,8 @@ def pdbgen(fulldat, resname, filename):
     f.close();
     log.info('PDB file completed!');
 
-def _get_anharm( data, function ):
-
-    data = np.abs(data) > function(data);
+def _get_anharm( data, function , j):
+    data = np.abs(data) > function[j](data, j);
     num = np.sum(data);
     indices = np.argsort( - data )[:num];
 
@@ -56,12 +55,12 @@ def main( config ):
     num_mat = np.zeros((icacoffs.shape[0], 4));
     data_mat = np.empty( shape=(icacoffs.shape[0], 4), dtype=list );
     func = [];
-    func.append( lambda x: np.mean(x) );
+    func.append( lambda x, i: np.mean(x) );
     for i in range(1,4):
-        func.append( lambda x: i*np.std(x) );
+        func.append( lambda x, i: i*np.std(x) );
     for i in range(icacoffs.shape[0]):
         for j in range(4):
-            data_mat[i,j], num_mat[i,j] = _get_anharm( icacoffs[i], func[j] );
+            data_mat[i,j], num_mat[i,j] = _get_anharm( icacoffs[i], func, j );
 
     if not os.path.isdir( config['saveDir'] ):
         os.makedirs( config['saveDir'] );    
@@ -80,7 +79,7 @@ def main( config ):
         ax.plot(np.abs(icacoffs[i]), color='black');
         stat = [];
         for j in range(4):
-            stat.append( func[j](icacoffs[i] ) );
+            stat.append( func[j](icacoffs[i], j) );
             ax.plot(stat[j], color=color[j]);
         ax.set_title('ICA Anharmonicity: Moment {0}'.format(i));
         ax.set_xlabel('Conformation');
@@ -95,8 +94,6 @@ def main( config ):
     if not os.path.isdir( pdbpath ):
         os.makedirs( pdbpath );
     for i in range( icacoffs.shape[0] ):
-        print coords.shape; 
-        print resnames.shape;
         pdbgen( coords[:,data_mat[i,2]], resnames, os.path.join(pdbpath, 'anharm_conform_moment{0}.pdb'.format(i)) );
         
 
