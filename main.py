@@ -79,9 +79,9 @@ def main( config ):
 
     #   Plotting
     color = ['black', 'green', 'blue', 'red'];
+    fig = plt.figure();
+    ax = fig.gca();
     for i in range(icacoffs.shape[0]):
-        fig = plt.figure();
-        ax = fig.gca();
         ax.plot(np.abs(icacoffs[i]), color='black', label='Data');
         stat = [];
         for j in range(1,4):
@@ -92,6 +92,7 @@ def main( config ):
         ax.legend(fontsize=10);
         plt.savefig( os.path.join(config['figDir'], '{0}_anharm_moment{1}.png'.format(config['pname'], i)) );
         pickle.dump( fig, file( os.path.join(config['figDir'], '{0}_anharm_moment{1}.pickle'.format(config['pname'], i)), 'w+') );
+        plt.cla();
         if 'graph' in config and config['graph']:
             plt.show();
 
