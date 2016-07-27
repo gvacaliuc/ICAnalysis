@@ -54,6 +54,12 @@ def main( config ):
     icacoffs = np.load( config['icacoffs'] );
     num_mat = np.zeros((icacoffs.shape[0], 4));
     data_mat = np.empty( shape=(icacoffs.shape[0], 4), dtype=list );
+
+    #   Bring mean to 0
+    mean = np.mean(coords, axis=1);
+    for i in range(coords.shape[0]):
+        coords[i] -= mean[i];
+
     func = [];
     func.append( lambda x, i: np.mean(x) );
     for i in range(1,4):
@@ -92,7 +98,7 @@ def main( config ):
     if not os.path.isdir( pdbpath ):
         os.makedirs( pdbpath );
     for i in range( icacoffs.shape[0] ):
-        pdbgen( coords[:,data_mat[i,2]], resnames, os.path.join(pdbpath, 'anharm_conform_moment{0}.pdb'.format(i)) );
+        pdbgen( coords[:,data_mat[i,3]], resnames, os.path.join(pdbpath, '{0}_anharm_conform_moment{0}.pdb'.format(config['pname'],i)) );
         
 
 
