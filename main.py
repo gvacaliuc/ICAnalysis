@@ -99,7 +99,7 @@ def main( config ):
     if not os.path.isdir( pdbpath ):
         os.makedirs( pdbpath );
     for i in range( icacoffs.shape[0] ):
-        pdbgen( coords[:,data_mat[i,3]], resnames, os.path.join(pdbpath, '{0}_anharm_conform_moment{0}.pdb'.format(config['pname'],i)) );
+        pdbgen( coords[:,data_mat[i,3]], resnames, os.path.join(pdbpath, '{0}_anharm_conform_moment{1}.pdb'.format(config['pname'],i)) );
         
 
 
