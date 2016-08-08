@@ -69,8 +69,9 @@ def main( config ):
     for i in range(icacoffs.shape[0]):
         for j in range(4):
             data_mat[i,j], num_mat[i,j] = _get_anharm( icacoffs[i], func, j );
-        if j >= 2:
-            cent_mat[i,j-2] = num_mat[i,j] / icacoffs.shape[1] * 100;
+
+    cent_mat = num_mat[:,2:] / icacoffs.shape[1];
+    cent_mat *= 100;
 
     if not os.path.isdir( config['saveDir'] ):
         os.makedirs( config['saveDir'] );    
@@ -78,7 +79,7 @@ def main( config ):
         os.makedirs( config['figDir'] );
 
     for i in range(2):
-        log.info('Average Percenage of time spent outside {0} standard deviations: {1}'.format(i+2,np.mean(cent_mat, axis=0)[i] ));
+        log.info('Average Percenage of time spent outside {0} standard deviations: {1}%'.format(i+2,np.mean(cent_mat, axis=0)[i] ));
     np.save( os.path.join(config['saveDir'], '{0}_percentage_anharm.npy'.format(config['pname'])), cent_mat);
     np.save( os.path.join(config['saveDir'], '{0}_num_anharm.npy'.format(config['pname'])), num_mat);
     np.save( os.path.join(config['saveDir'], '{0}_anharm_groups.npy'.format(config['pname'])), data_mat);
