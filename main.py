@@ -30,9 +30,10 @@ def pdbgen(fulldat, resname, filename):
     log.info('PDB file completed!');
 
 def _get_anharm( data, function , j):
-    data = np.abs(data) > function[j](data, j);
-    num = np.sum(data);
-    indices = np.argsort( - data )[:num];
+    above = np.abs(data) > function[j](data, j);
+    num = np.sum(above);
+    indices = np.argsort( - above )[:num];
+    indices = indices[np.argsort(np.abs(data)[indices])];
 
     return list(indices), num;
 
@@ -54,6 +55,7 @@ def main( config ):
     icacoffs = np.load( config['icacoffs'] );
     num_mat = np.zeros((icacoffs.shape[0], 4));
     data_mat = np.empty( shape=(icacoffs.shape[0], 4), dtype=list );
+    cent_mat = np.empty((icacoffs.shape[0],2));
 
     #   Bring mean to 0
     mean = np.mean(icacoffs, axis=1);
@@ -67,12 +69,17 @@ def main( config ):
     for i in range(icacoffs.shape[0]):
         for j in range(4):
             data_mat[i,j], num_mat[i,j] = _get_anharm( icacoffs[i], func, j );
+        if j >= 2:
+            cent_mat[i,j-2] = num_mat[i,j] / icacoffs.shape[1] * 100;
 
     if not os.path.isdir( config['saveDir'] ):
         os.makedirs( config['saveDir'] );    
     if not os.path.isdir( config['figDir'] ):
-        os.makedirs( config['figDir'] );   
+        os.makedirs( config['figDir'] );
 
+    for i in range(2):
+        log.info('Average Percenage of time spent outside {0} standard deviations: {1}'.format(i+2,np.mean(cent_mat, axis=0)[i] ));
+    np.save( os.path.join(config['saveDir'], '{0}_percentage_anharm.npy'.format(config['pname'])), cent_mat);
     np.save( os.path.join(config['saveDir'], '{0}_num_anharm.npy'.format(config['pname'])), num_mat);
     np.save( os.path.join(config['saveDir'], '{0}_anharm_groups.npy'.format(config['pname'])), data_mat);
     pdbpath = os.path.join( config['saveDir'], 'pdbfiles' );
