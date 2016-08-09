@@ -37,6 +37,13 @@ def _get_anharm( data, function , j):
 
     return list(indices), num;
 
+def _get_time( devs, std, j ):
+    a = [];
+    a.append(devs[3*j] > std[0]);
+    for i in range(1,3):
+        a += devs[3*j+i] > std[i];
+    return np.sum(a>0);
+
 def main( config ):
 
     log = logging.getLogger('main');
@@ -70,8 +77,16 @@ def main( config ):
         for j in range(4):
             data_mat[i,j], num_mat[i,j] = _get_anharm( icacoffs[i], func, j );
 
-    cent_mat = num_mat[:,2:] / icacoffs.shape[1];
-    cent_mat *= 100;
+    devs = coords - np.mean(coords, axis=1).reshape((-1,1));
+    std = np.std(coords, axis = 1);
+    
+    anharm = [];
+    for i in range(2):
+        anharm.append([]);
+        for j in range(coords.shape[0] // 3):
+            anharm[i].append(_gettime(devs, (2+i)*std[3*j:3*j+3], j));
+    
+    anharm = np.array( anharm / coords.shape[1] );
 
     if not os.path.isdir( config['saveDir'] ):
         os.makedirs( config['saveDir'] );    
