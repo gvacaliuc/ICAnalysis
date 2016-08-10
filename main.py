@@ -84,21 +84,15 @@ def main( config ):
     for i in range(2):
         anharm.append([]);
         for j in range(coords.shape[0] // 3):
-            anharm[i].append(_gettime(devs, (2+i)*std[3*j:3*j+3], j));
+            anharm[i].append(_get_time(devs, (2+i)*std[3*j:3*j+3], j));
     
-    anharm = np.array( anharm / coords.shape[1] );
-
-    if not os.path.isdir( config['saveDir'] ):
-        os.makedirs( config['saveDir'] );    
-    if not os.path.isdir( config['figDir'] ):
-        os.makedirs( config['figDir'] );
+    anharm = 100*np.array( anharm )/ coords.shape[1];
 
     for i in range(2):
-        log.info('Average Percenage of time spent outside {0} standard deviations: {1}%'.format(i+2,np.mean(cent_mat, axis=0)[i] ));
-    np.save( os.path.join(config['saveDir'], '{0}_percentage_anharm.npy'.format(config['pname'])), cent_mat);
+        log.info('Average Percenage of time spent outside {0} standard deviations: {1}%'.format(i+2,np.mean(anharm[i]) ));
+    np.save( os.path.join(config['saveDir'], '{0}_percentage_anharm.npy'.format(config['pname'])), anharm);
     np.save( os.path.join(config['saveDir'], '{0}_num_anharm.npy'.format(config['pname'])), num_mat);
     np.save( os.path.join(config['saveDir'], '{0}_anharm_groups.npy'.format(config['pname'])), data_mat);
-    pdbpath = os.path.join( config['saveDir'], 'pdbfiles' );
 
     #   Plotting
     color = ['black', 'green', 'blue', 'red'];
@@ -119,15 +113,37 @@ def main( config ):
         if 'graph' in config and config['graph']:
             plt.show();
 
-    if not os.path.isdir( pdbpath ):
-        os.makedirs( pdbpath );
     for i in range( icacoffs.shape[0] ):
         pdbgen( coords[:,data_mat[i,3]], 
                 resnames,
-                os.path.join(pdbpath, '{0}_anharm_conform_moment{1}.pdb'.format(config['pname'],i)),
+                os.path.join(config['pdbpath'], '{0}_anharm_conform_moment{1}.pdb'.format(config['pname'],i)),
               );
         
+def validate(config):
 
+    req_dirs = ['saveDir',];
+    for dr in req_dirs:
+        if not dr in config:
+            raise KeyError('You didn\'t provide a value for the required config value: {0}'.format(dr));
+    other_dirs = {
+            'figDir':os.path.join(config['saveDir'], 'figures'),
+            'pdbpath':os.path.join(config['saveDir'], 'pdbfiles'),
+                };
+    req_dirs.extend(other_dirs.keys());
+    config.update(other_dirs);
+    for dr in req_dirs:
+        if not os.path.isdir( config[dr] ):
+            os.makedirs( config[dr] );
+
+    files = ['coords', 'resnames', 'icacoffs',];
+    for f in files:
+        if not f in config:
+            raise KeyError('You didn\'t provide a value for the required config value: {0}'.format(dr));
+        if not os.path.isfile(config[f]):
+            raise IOError('The file path given for \'{0}\': \'{1}\' isn\'t a file.'.format(f, config[f]));
+
+    config['logfile'] = os.path.join(config['saveDir'], 'log_icanalysis.txt');
+    return config;
 
 if __name__ == '__main__':
 
@@ -153,6 +169,8 @@ if __name__ == '__main__':
     if values.verbose: level = 20;
     elif values.debug: level = 10;
     config['graph'] = values.graph;
+
+    config = validate(config);
 
     #   Setup stream logger
     ch = logging.StreamHandler(sys.stdout);
